@@ -1,7 +1,53 @@
 use std::cmp::{max, min};
 use std::collections::HashMap;
+use std::collections::VecDeque;
+
 
 fn main() {
+
+    println!("TEST1");
+    let output = shortest_path_binary_matrix(vec![vec![0,1],vec![1,0]]);
+    println!("{:?}", output);
+
+    println!("TEST2");
+    let output = shortest_path_binary_matrix(vec![vec![0,0,0],vec![1,1,0],vec![1,1,0]]);
+    println!("{:?}", output);
+
+    println!("TEST3");
+    let output = shortest_path_binary_matrix(
+        vec![
+        vec![0,1,1,0,0,0], vec![0,1,0,1,1,0],
+        vec![0,1,1,0,1,0], vec![0,0,0,1,1,0],
+        vec![1,1,1,1,1,0], vec![1,1,1,1,1,0]
+        ]
+    );
+    println!("{:?}", output);
+
+    println!("TEST4");
+    let output = shortest_path_binary_matrix(vec![vec![1,0,0],vec![1,1,0],vec![1,1,0]]);
+    println!("{:?}", output);
+
+    println!("TEST5");
+    let output = shortest_path_binary_matrix(
+        vec![
+            vec![0,1,0,0,0,0], vec![0,1,0,1,1,0],
+            vec![0,1,1,0,1,0], vec![0,0,0,0,1,0],
+            vec![1,1,1,1,1,0], vec![1,1,1,1,1,0]
+            ]
+        );
+    println!("{:?}", output);
+// [[0,0,0,0,1],[1,0,0,0,0],[0,1,0,1,0],[0,0,0,1,1],[0,0,0,1,0]]
+
+    println!("TEST5");
+    let output = shortest_path_binary_matrix(
+        vec![
+            vec![0,0,0,0,1],vec![1,0,0,0,0],
+            vec![0,1,0,1,0],vec![0,0,0,1,1],
+            vec![0,0,0,1,0]
+            ]
+        );
+
+    println!("{:?}", output);
 }
 
 
@@ -458,3 +504,65 @@ pub fn remove_duplicates(nums: &mut Vec<i32>) -> i32 {
     return hash_length
 }
 
+pub fn max_vowels(s: String, k: i32) -> i32 {
+    fn is_vowel(ch: u8) -> i32 {
+        match ch {
+            105 | 111 | 97 | 117 | 101 => 1,
+            _ => 0,
+        }
+    }
+    let mut res = 0;
+    let mut iter = s.as_bytes().windows(k as usize);
+    loop {
+        match iter.next() {
+            Some(arr) => {
+                res = max(res, arr.into_iter().fold(0, |acc, x| acc+is_vowel(*x)));
+                if res == k {break}
+            },
+            None => break
+        }
+    }
+    return res
+}
+
+
+
+
+pub fn shortest_path_binary_matrix(grid: Vec<Vec<i32>>) -> i32 {
+    let n = grid.len();
+    if grid[0][0] == 1 || grid[n - 1][n - 1] == 1 {
+        return -1;
+    }
+    
+    let mut queue = VecDeque::new();
+    let mut visited = vec![vec![false; n]; n];
+    
+    queue.push_back((0, 0, 1));
+    visited[0][0] = true;
+    
+    while let Some((row, col, length)) = queue.pop_front() {
+        if row == n - 1 && col == n - 1 {
+            return length;
+        }
+        
+        for (dr, dc) in &[
+            (-1, 0), (1, 0), (0, -1), (0, 1),
+            (-1, -1), (-1, 1), (1, -1), (1, 1)
+        ] {
+            let new_row = row as i32 + dr;
+            let new_col = col as i32 + dc;
+            
+            if new_row >= 0 && new_row < n as i32 && new_col >= 0 && new_col < n as i32 {
+                let new_row = new_row as usize;
+                let new_col = new_col as usize;
+                
+                if grid[new_row][new_col] == 0 && !visited[new_row][new_col] {
+                    queue.push_back((new_row, new_col, length + 1));
+                    visited[new_row][new_col] = true;
+                }
+            }
+        }
+    }
+    
+    -1
+}
