@@ -4,50 +4,41 @@ use std::collections::VecDeque;
 
 
 fn main() {
-
-    println!("TEST1");
-    let output = shortest_path_binary_matrix(vec![vec![0,1],vec![1,0]]);
-    println!("{:?}", output);
-
-    println!("TEST2");
-    let output = shortest_path_binary_matrix(vec![vec![0,0,0],vec![1,1,0],vec![1,1,0]]);
-    println!("{:?}", output);
-
-    println!("TEST3");
-    let output = shortest_path_binary_matrix(
-        vec![
-        vec![0,1,1,0,0,0], vec![0,1,0,1,1,0],
-        vec![0,1,1,0,1,0], vec![0,0,0,1,1,0],
-        vec![1,1,1,1,1,0], vec![1,1,1,1,1,0]
-        ]
+    let result = maximum_detonation(
+        vec![vec![1,2,3],vec![2,3,1],vec![3,4,2],vec![4,5,3],vec![5,6,4]]
     );
-    println!("{:?}", output);
+    println!("{:?}", result);
 
-    println!("TEST4");
-    let output = shortest_path_binary_matrix(vec![vec![1,0,0],vec![1,1,0],vec![1,1,0]]);
-    println!("{:?}", output);
+    let result = maximum_detonation(
+        vec![vec![4,4,3],vec![4,4,3]]
+    );
+    println!("{:?}", result);
 
-    println!("TEST5");
-    let output = shortest_path_binary_matrix(
-        vec![
-            vec![0,1,0,0,0,0], vec![0,1,0,1,1,0],
-            vec![0,1,1,0,1,0], vec![0,0,0,0,1,0],
-            vec![1,1,1,1,1,0], vec![1,1,1,1,1,0]
-            ]
-        );
-    println!("{:?}", output);
-// [[0,0,0,0,1],[1,0,0,0,0],[0,1,0,1,0],[0,0,0,1,1],[0,0,0,1,0]]
+    let result = maximum_detonation(
+        vec![vec![2,1,3],vec![6,1,4]]
+    );
+    println!("{:?}", result);
 
-    println!("TEST5");
-    let output = shortest_path_binary_matrix(
-        vec![
-            vec![0,0,0,0,1],vec![1,0,0,0,0],
-            vec![0,1,0,1,0],vec![0,0,0,1,1],
-            vec![0,0,0,1,0]
-            ]
-        );
+    let result = maximum_detonation(vec![vec![1,1,100000],vec![100000,100000,1]]);
+    println!("{:?}", result);
 
-    println!("{:?}", output);
+
+    let result = maximum_detonation(vec![
+        vec![855,82,158],vec![17,719,430],vec![90,756,164],
+        vec![376,17,340],vec![691,636,152],vec![565,776,5],
+        vec![464,154,271],vec![53,361,162],vec![278,609,82],
+        vec![202,927,219],vec![542,865,377],vec![330,402,270],
+        vec![720,199,10],vec![986,697,443],vec![471,296,69],
+        vec![393,81,404],vec![127,405,177]
+    ]);
+    println!("{:?}", result);
+
+
+
+
+    // println!("{:?}", (100000 - 1)*(100000 - 1 )*2);
+    // println!("{:?}", 100000*100000);
+    // println!("{:?}", )
 }
 
 
@@ -388,10 +379,6 @@ pub fn find_subsequences(nums: Vec<i32>) -> Vec<Vec<i32>> {
         if nums[index] > max_num {
         }
     }
-
-
-
-
     result
 }
 
@@ -566,3 +553,61 @@ pub fn shortest_path_binary_matrix(grid: Vec<Vec<i32>>) -> i32 {
     
     -1
 }
+
+
+pub fn maximum_detonation(mut bombs: Vec<Vec<i32>>) -> i32 {
+
+    // Find first neighbours 
+    fn get_bombs(bombs:&mut Vec<Vec<i32>>, bi: usize) -> Vec<usize> {
+        let mut result: Vec<usize> = Vec::new();
+        for i in 0..bombs.len() {
+            if i == bi {
+                result.push(bi);
+                continue;
+            }
+            if ((bombs[i][0] - bombs[bi][0]) as i64).pow(2) + ((bombs[i][1] - bombs[bi][1]) as i64).pow(2) <= (bombs[bi][2] as i64).pow(2) {
+                result.push(i);
+            }
+        }
+        
+        return result
+    }
+
+
+    let mut bomb_map: HashMap<usize, Vec<usize>> = HashMap::new();
+    let mut output = 0;
+    // Go through all bombs 
+    for cbi in 0..bombs.len() {
+
+        // Check the Hash 
+        if bomb_map.contains_key(&cbi) { continue }
+
+        let mut result: Vec<usize> = Vec::new();
+        result.push(cbi);
+        result.extend(get_bombs(&mut bombs, cbi));
+        result.sort();
+        result.dedup();
+        let mut is_done = false;
+        loop {
+            // add new neighbours 
+            is_done = true;
+            for sub_n in result.clone() {
+                if bomb_map.contains_key(&sub_n) {
+                    continue;
+                } else {
+                    is_done = false;
+                    let res = get_bombs(&mut bombs, sub_n);
+                    bomb_map.insert(sub_n, res.clone());
+                    result.extend(res);
+                    result.sort();
+                    result.dedup();
+                }
+            }
+            // check 
+            if is_done == true {break;}
+        }
+        output = max(output, result.len());
+    }
+    output as i32 
+}
+
