@@ -1,44 +1,15 @@
+use core::num;
 use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::collections::VecDeque;
+use std::result;
 
 
 fn main() {
-    let result = maximum_detonation(
-        vec![vec![1,2,3],vec![2,3,1],vec![3,4,2],vec![4,5,3],vec![5,6,4]]
-    );
+    let mut nums = vec![1,1,2];
+    let result = remove_duplicates(&mut nums);
     println!("{:?}", result);
-
-    let result = maximum_detonation(
-        vec![vec![4,4,3],vec![4,4,3]]
-    );
-    println!("{:?}", result);
-
-    let result = maximum_detonation(
-        vec![vec![2,1,3],vec![6,1,4]]
-    );
-    println!("{:?}", result);
-
-    let result = maximum_detonation(vec![vec![1,1,100000],vec![100000,100000,1]]);
-    println!("{:?}", result);
-
-
-    let result = maximum_detonation(vec![
-        vec![855,82,158],vec![17,719,430],vec![90,756,164],
-        vec![376,17,340],vec![691,636,152],vec![565,776,5],
-        vec![464,154,271],vec![53,361,162],vec![278,609,82],
-        vec![202,927,219],vec![542,865,377],vec![330,402,270],
-        vec![720,199,10],vec![986,697,443],vec![471,296,69],
-        vec![393,81,404],vec![127,405,177]
-    ]);
-    println!("{:?}", result);
-
-
-
-
-    // println!("{:?}", (100000 - 1)*(100000 - 1 )*2);
-    // println!("{:?}", 100000*100000);
-    // println!("{:?}", )
+    println!("{:?}", nums);
 }
 
 
@@ -479,17 +450,6 @@ pub fn search(nums: Vec<i32>, target: i32) -> i32 {
 }
 
 
-pub fn remove_duplicates(nums: &mut Vec<i32>) -> i32 {
-    let mut hash: HashMap<i32, usize> = HashMap::new();
-    let mut hash_length = 0;
-    for i in 0..nums.len() {
-        if hash.contains_key(&nums[i]) == false {
-            hash_length += 1;
-        }
-        hash.insert(nums[i], i);
-    }
-    return hash_length
-}
 
 pub fn max_vowels(s: String, k: i32) -> i32 {
     fn is_vowel(ch: u8) -> i32 {
@@ -610,4 +570,54 @@ pub fn maximum_detonation(mut bombs: Vec<Vec<i32>>) -> i32 {
     }
     output as i32 
 }
+
+
+
+
+
+pub fn merge(nums1: &mut Vec<i32>, m: i32, nums2: &mut Vec<i32>, n: i32) {
+    let  (mut m, mut n) = (m as usize, n as usize);
+    while n > 0 {
+        if m > 0 && nums1[m - 1] > nums2[n - 1] {
+            nums1[m + n - 1] = nums1[m - 1];
+            m -= 1;
+        } else {
+            nums1[m + n - 1] = nums2[n - 1];
+            n -= 1;
+        }
+    }
+}
+
+
+pub fn remove_element(nums: &mut Vec<i32>, val: i32) -> i32 {
+    let mut result = 0;
+    for i in 0..nums.len() {
+        //
+        if nums[i] != val {
+            nums[result] = nums[i];
+            result += 1;
+        }
+    }
+    result as i32
+}
+
+
+pub fn remove_duplicates(nums: &mut Vec<i32>) -> i32 {
+    let mut hash: HashMap<i32, usize> = HashMap::new();
+    let mut hash_length = 0;
+    let mut i: usize = 0;
+    while i < nums.len() {
+        if hash.contains_key(&nums[i]) == false {
+            hash_length += 1;
+            hash.insert(nums[i], i);
+        } else {
+            nums.remove(i);
+            i -= 1;
+        }
+        i += 1
+        
+    }
+    return hash_length
+}
+
 
