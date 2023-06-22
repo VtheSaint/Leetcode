@@ -1,15 +1,15 @@
-use core::num;
 use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::collections::VecDeque;
-use std::result;
-
+use std::mem;
 
 fn main() {
-    let mut nums = vec![1,1,2];
-    let result = remove_duplicates(&mut nums);
+    let mut nums = vec![1,2,3,4,5,6,7];
+    let result = rotate(&mut nums, 3);
+    println!("{:?}", nums );
+
+    let result = max_profit(vec![7,6,4,3,1]);
     println!("{:?}", result);
-    println!("{:?}", nums);
 }
 
 
@@ -620,4 +620,68 @@ pub fn remove_duplicates(nums: &mut Vec<i32>) -> i32 {
     return hash_length
 }
 
+// Version II
+pub fn remove_duplicates_v2(nums: &mut Vec<i32>) -> i32 {
+    let mut last = (0, -1);
 
+    nums.retain(|num|{
+        let result = last.0 == last.1 && last.1 == *num;
+
+        last.0 = last.1;
+        last.1 = *num;
+        !result
+    });
+
+    nums.len() as i32
+}
+
+
+pub fn majority_element(nums: Vec<i32>) -> i32 {
+    let mut hash: HashMap<i32, i32> = HashMap::new();
+    let result = 0;
+    let l = nums.len() as i32;
+    for num in nums {
+        if hash.contains_key(&num) {
+            let count = hash.get(&num).unwrap().clone();
+            hash.remove(&num);
+            hash.insert(num, count + 1);
+        } else {
+            hash.insert(num, 1);
+        }
+    }
+    for num in hash.keys().into_iter() {
+        if *hash.get(&num).unwrap() > l / 2 {
+            return *num
+        }
+    }
+    -1
+}
+
+
+pub fn rotate(nums: &mut Vec<i32>, k: i32) {
+    for i in 0..k {
+        let x = nums.pop().unwrap();
+        nums.insert(0, x);
+    }       
+}
+
+
+pub fn max_profit(prices: Vec<i32>) -> i32 {
+    let mut result = 0;
+    let mut best_buy_price = i32::MAX;
+    let mut best_sell_price = 0;
+    for price in prices {
+        if price < best_buy_price {
+            best_buy_price = price;
+            best_sell_price = 0;
+        }
+        else if price > best_sell_price {
+            best_sell_price = price;
+            let diff = best_sell_price - best_buy_price;
+            if diff > result {
+                result = diff;
+            }
+        }
+    }
+    result
+}
