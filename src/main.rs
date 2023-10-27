@@ -1,14 +1,12 @@
 use std::cmp::{max, min};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::collections::VecDeque;
-use std::mem;
+use std::{mem, thread};
 
 fn main() {
-    let mut nums = vec![1,2,3,4,5,6,7];
-    let result = rotate(&mut nums, 3);
-    println!("{:?}", nums );
-
-    let result = max_profit(vec![7,6,4,3,1]);
+    // let result = min_path_sum(vec![vec![1,3,1],vec![1,5,1],vec![4,2,1]]);
+    // println!("{:?}", result);
+    let result = climb_stairs(4);
     println!("{:?}", result);
 }
 
@@ -684,4 +682,227 @@ pub fn max_profit(prices: Vec<i32>) -> i32 {
         }
     }
     result
+}
+
+
+pub fn max_profit_v2(prices: Vec<i32>) -> i32 {
+    prices.windows(2).fold(0, |acc, w| acc + (w[1] - w[0]).max(0))
+}
+
+pub fn can_jump(nums: Vec<i32>) -> bool {
+    let mut max_val: i32 = 0;
+
+    for (idx, val) in nums.iter().enumerate() {
+        println!("{:?}",  (idx, val));
+        if idx as i32 > max_val {
+            return false;
+        }
+        max_val = std::cmp::max(max_val, (idx as i32 + *val as i32) as i32);
+        println!("MAX_val={:?}", max_val);
+    }
+    return true
+}
+
+// [3,2,1,0,4]
+
+
+pub fn minimum_deletions(nums: Vec<i32>) -> i32 {
+    let mut min_num = std::i32::MAX;
+    let mut min_index = nums.len();
+    let mut max_num = std::i32::MIN;
+    let mut max_index = nums.len();
+    for num in 0..nums.len() {
+        if nums[num] < min_num { 
+            min_num = nums[num];
+            min_index = num
+        }
+        if nums[num] > max_num { 
+            max_num = nums[num];
+            max_index = num;
+        }
+    }
+
+    // min and max are not inverted
+    let mut result = max(min_index, max_index) + 1;
+
+    // min inverted max not 
+    min_index = nums.len() - 1 - min_index;
+    result = min(result, max_index + min_index + 2);
+
+    // min and max inverted
+    max_index = nums.len() - 1 - max_index;
+    result = min(result, max(max_index, min_index) + 1);
+
+    // max inverted min not 
+    min_index = nums.len() - 1 - min_index;
+    result = min(result, max_index + min_index + 2);
+
+
+    result as i32 
+}
+
+
+pub fn find_all_people(n: i32, mut meetings: Vec<Vec<i32>>, first_person: i32) -> Vec<i32> {
+    
+    // HashMap<person,(time, knows_secret)>
+    let mut persons: HashMap<i32,bool> = HashMap::new();
+    for i in 0..n {
+        persons.insert(i, false);
+    }
+
+    // This people knows the secret at 0 second
+    persons.insert(0, true);
+    persons.insert(first_person, true);
+    
+    // Sorting meetings by time 
+    meetings.sort_by(|a, b| a[2].partial_cmp(&b[2]).unwrap());
+    let mut current_time = 0;
+    let mut meeting_pool: Vec<(i32, i32)> = Vec::new();
+    for m_index in 0..meetings.len() {
+        // if we have meetings in the same time 
+        if current_time != meetings[m_index][2] {
+            // we are in new pool 
+            // check the last pool 
+            for _ in 0..2 {
+                for meeting in &meeting_pool {
+                    if persons.get(&meeting.0).unwrap() == &true || persons.get(&meeting.1).unwrap() == &true {
+                        persons.insert(meeting.1,  true);
+                        persons.insert(meeting.0, true);   
+                    }
+                }
+            }
+            // create a new one 
+            current_time = meetings[m_index][2];
+            meeting_pool = vec![(meetings[m_index][0], meetings[m_index][1])];
+        } 
+        else { 
+            meeting_pool.push((meetings[m_index][0], meetings[m_index][1]))
+        }
+
+    }
+    for _ in 0..2 {
+        for meeting in &meeting_pool {
+            if persons.get(&meeting.0).unwrap() == &true || persons.get(&meeting.1).unwrap() == &true {
+                persons.insert(meeting.1,  true);
+                persons.insert(meeting.0, true);   
+            }
+        }
+    }
+    let mut result = persons
+        .iter()
+        .filter(|person| person.1 == &true)
+        .map(|person| person.0.clone())
+        .collect::<Vec<i32>>();
+    
+
+    result.sort();
+    result
+}
+
+
+pub fn minimum_total(mut triangle: Vec<Vec<i32>>) -> i32 {
+    if triangle.len() == 1 { return triangle[0][0]}
+    while triangle.len() != 2 {
+        let cur_row = triangle.len()-2;
+        for i in 0..triangle[cur_row].len() {
+            triangle[cur_row][i] = min(triangle[cur_row+1][i] + triangle[cur_row][i], triangle[cur_row+1][i+1] + triangle[cur_row][i]);
+        }
+        triangle.pop();
+    }
+    triangle[0][0] = min(triangle[0][0] + triangle[1][0], triangle[0][0] + triangle[1][1]);
+    return triangle[0][0]
+}
+
+
+pub fn min_path_sum(mut grid: Vec<Vec<i32>>) -> i32 {
+    for y in 0..grid.len() {
+        for x in 0..grid[0].len() {
+            if x == 0 && y == 0 {
+                continue;
+            }
+            else if x == 0 {
+                grid[y][x] += grid[y-1][x];
+            }
+            else if y == 0 {
+                grid[y][x] += grid[y][x-1];
+            }
+            else {
+                grid[y][x] = min(grid[y][x] + grid[y][x-1], grid[y][x] + grid[y-1][x]);
+            }
+        }
+    }
+    return grid[grid.len()-1][grid[0].len()-1]
+
+}
+
+
+pub fn climb_stairs(n: i32) -> i32 {
+    if n <= 2 {
+        return n;
+    }
+    
+    let mut dp = vec![0; n as usize + 1];
+    dp[1] = 1;
+    dp[2] = 2;
+    
+    for i in 3..=n as usize {
+        dp[i] = dp[i - 1] + dp[i - 2];
+    }
+    
+    dp[n as usize]
+}
+
+
+use rand::Rng;
+use rand::seq::SliceRandom;
+
+struct RandomizedSet {
+    set: HashSet<i32>,
+    v: Vec<i32>
+
+}
+
+
+/** 
+ * `&self` means the method takes an immutable reference.
+ * If you need a mutable reference, change it to `&mut self` instead.
+ */
+impl RandomizedSet {
+
+    fn new() -> Self {
+        Self { 
+            set: HashSet::new(),
+            v: Vec::new()
+        }
+    }
+    
+    fn insert(&mut self, val: i32) -> bool {
+        if self.set.contains(&val) {false} else {self.set.insert(val); self.v.push(val); true}
+    }
+    
+    fn remove(&mut self, val: i32) -> bool {
+        if self.set.contains(&val) {false} else {self.set.remove(&val); self.remove(val); true}
+    }
+    
+    fn get_random(&self) -> i32 {
+        *self.v.choose(&mut rand::thread_rng()).unwrap()
+    }
+}
+
+pub fn product_except_self(nums: Vec<i32>) -> Vec<i32> {
+    let mut res = vec![];
+    let mut prefix = 1;
+
+    for i in 0..nums.len() {
+        res.push(prefix);
+        prefix *= nums[i];
+    }
+
+    let mut postfix = 1;
+    for i in (0..nums.len()).rev() {
+        res[i] *= postfix;
+        postfix *= nums[i];
+    }
+    
+    res
 }
