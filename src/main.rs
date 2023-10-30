@@ -1,13 +1,10 @@
-use std::cmp::{max, min};
+use std::cmp::{max, min, self};
 use std::collections::{HashMap, HashSet};
 use std::collections::VecDeque;
-use std::{mem, thread};
 
 fn main() {
-    // let result = min_path_sum(vec![vec![1,3,1],vec![1,5,1],vec![4,2,1]]);
-    // println!("{:?}", result);
-    let result = climb_stairs(4);
-    println!("{:?}", result);
+    let result = is_palindrome("A man, a plan, a canal: Panama".to_string());
+    println!("{}", result);
 }
 
 
@@ -256,7 +253,7 @@ pub fn my_atoi(s: String) -> i32 {
 }
 
 
-pub fn is_palindrome(x: i32) -> bool {
+pub fn is_palindrome_(x: i32) -> bool {
     let mut a = Vec::from(x.to_string());
     a.reverse();
     let b = String::from_utf8(a).unwrap();
@@ -853,7 +850,6 @@ pub fn climb_stairs(n: i32) -> i32 {
 }
 
 
-use rand::Rng;
 use rand::seq::SliceRandom;
 
 struct RandomizedSet {
@@ -905,4 +901,107 @@ pub fn product_except_self(nums: Vec<i32>) -> Vec<i32> {
     }
     
     res
+}
+
+
+pub fn can_complete_circuit(gas: Vec<i32>, cost: Vec<i32>) -> i32 {
+    for x in 0..gas.len() {
+        let mut current = gas[x];
+        for y in 1..=gas.len() {
+            let current_gas = (x + y - 1) % gas.len();
+            let next_gas = (x + y)%gas.len();
+            current -= cost[current_gas];
+            if current < 0 {
+                current = -1;
+                break;
+            }
+            current += gas[next_gas];
+        }
+        if current < 0 {
+            current = 0;
+        } else if current > 0 {
+            return x as i32;
+        }
+    }
+    return -1;
+}
+
+
+
+pub fn unique_paths_with_obstacles(mut obstacle_grid: Vec<Vec<i32>>) -> i32 {
+
+    for y in 0..obstacle_grid.len() { 
+        for x in 0..obstacle_grid[0].len() {
+            if obstacle_grid[y][x] == 1 { obstacle_grid[y][x] = -1}
+        }
+    }
+    if obstacle_grid[0][0] == -1 {return 0} else { obstacle_grid[0][0] = 1};
+    for y in 0..obstacle_grid.len() {
+        for x in 0..obstacle_grid[0].len() {
+            if obstacle_grid[y][x] == -1 { 
+                continue;
+            }
+            if y == obstacle_grid.len() - 1  && x == obstacle_grid[0].len() - 1 {
+                continue;
+            }
+            else if y == obstacle_grid.len() - 1 {
+                if obstacle_grid[y][x + 1] != -1 {
+                    obstacle_grid[y][x+1] += obstacle_grid[y][x];
+                }
+                
+            }
+            else if x == obstacle_grid[0].len() - 1 {
+                if obstacle_grid[y+1][x] != -1 {
+                    obstacle_grid[y+1][x] += obstacle_grid[y][x];
+                }
+            }
+            else { 
+                if obstacle_grid[y+1][x] != -1 {
+                    obstacle_grid[y+1][x] += obstacle_grid[y][x];
+                }
+                if obstacle_grid[y][x+1] != -1 {
+                    obstacle_grid[y][x+1] += obstacle_grid[y][x];
+                }
+            }
+        }
+    }
+    let result = *obstacle_grid.last().unwrap().last().unwrap();
+    if result == -1 {return 0} else {return result}
+
+}
+
+
+pub fn maximal_square(matrix: Vec<Vec<char>>) -> i32 {
+    let rows = matrix.len();
+    let cols = matrix[0].len();
+    let mut dp = vec![vec![0; cols + 1]; rows + 1];
+    let mut max_len: i32 = 0;
+
+    for row in 1..=rows {
+        for col in 1..=cols {
+            if matrix[row - 1][col - 1] == '1' {
+                dp[row][col] = 1 + cmp::min(
+                    cmp::min(dp[row - 1][col - 1], dp[row - 1][col]),
+                    dp[row][col - 1],
+                );
+                max_len = cmp::max(max_len, dp[row][col] as i32);
+            }
+        }
+    }
+
+    max_len * max_len
+}
+
+
+
+pub fn is_palindrome(s: String) -> bool {
+    let ss = s
+        .as_bytes()
+        .iter()
+        .filter(|x| x.is_ascii_alphanumeric())
+        .map(|x| x.to_ascii_lowercase())
+        .collect::<Vec<u8>>();
+    let mut s2 = ss.clone();
+    s2.reverse();
+    return ss == s2
 }
